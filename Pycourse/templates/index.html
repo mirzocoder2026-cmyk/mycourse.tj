@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EduPlatform — Платформаи Таълимӣ</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  body { background:#fff; }
+  .hero { background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 50%,#2563EB 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;position:relative;overflow:hidden; }
+  .hero-content { position:relative;z-index:1;max-width:700px; }
+  .hero-badge { display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;margin-bottom:28px;backdrop-filter:blur(10px); }
+  .hero h1 { font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,64px);font-weight:700;color:#fff;line-height:1.15;margin-bottom:20px; }
+  .hero h1 span { background:linear-gradient(90deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+  .hero p { font-size:18px;color:rgba(255,255,255,.75);margin-bottom:36px;line-height:1.7; }
+  .hero-btns { display:flex;gap:14px;justify-content:center;flex-wrap:wrap; }
+  .btn-hero-primary { background:#fff;color:#1E3A5F;font-weight:700;padding:16px 32px;border-radius:12px;font-size:16px;text-decoration:none;transition:all .2s; }
+  .btn-hero-primary:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3); }
+  .btn-hero-outline { background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4);padding:14px 28px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;transition:all .2s; }
+  .features { padding:80px 24px; }
+  .features-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px;max-width:1100px;margin:0 auto; }
+  .feat-card { background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,.07),0 8px 24px rgba(0,0,0,.05);border:1px solid #E2E8F0;transition:transform .2s; }
+  .feat-card:hover { transform:translateY(-4px); }
+  .feat-icon { width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px; }
+  .feat-title { font-size:17px;font-weight:700;margin-bottom:8px; }
+  .feat-desc { font-size:14px;color:#64748B;line-height:1.6; }
+  .section-title { text-align:center;margin-bottom:48px; }
+  .section-title h2 { font-family:'Playfair Display',serif;font-size:36px;font-weight:700;margin-bottom:10px; }
+  .section-title p { font-size:16px;color:#64748B; }
+  .stats-section { background:linear-gradient(135deg,#2563EB,#7C3AED);padding:60px 24px;text-align:center; }
+  .stats-row { display:flex;justify-content:center;flex-wrap:wrap;gap:48px;max-width:800px;margin:0 auto; }
+  .stat-item { color:#fff; }
+  .stat-num { font-size:48px;font-weight:800;line-height:1; }
+  .stat-lbl { font-size:14px;opacity:.8;margin-top:4px; }
+  footer { background:#0F172A;color:rgba(255,255,255,.6);text-align:center;padding:24px;font-size:14px; }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🎓 Платформаи таълимии пешрафта барои Тоҷикистон</div>
+    <h1>Омӯзиш бо<br><span>EduPlatform</span></h1>
+    <p>Видеодарсҳо, тестҳо, вазифаҳо ва чати AI — ҳама дар як ҷо. Бо AI Ёрдамчи ба ҳар саволи шумо ҷавоб мегирем.</p>
+    <div class="hero-btns">
+      <a href="/login" class="btn-hero-primary" id="cta-btn">🚀 Оғоз кардан</a>
+      <a href="#features" class="btn-hero-outline">📖 Бештар бидон</a>
+    </div>
+    <div style="margin-top:48px;font-size:48px">📚</div>
+  </div>
+</section>
+
+<section class="stats-section">
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-num">100+</div><div class="stat-lbl">Хонандагон</div></div>
+    <div class="stat-item"><div class="stat-num">50+</div><div class="stat-lbl">Видеодарс</div></div>
+    <div class="stat-item"><div class="stat-num">200+</div><div class="stat-lbl">Масъалаҳо</div></div>
+    <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-lbl">AI Ёрдамчи</div></div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="section-title">
+    <h2>Имкониятҳои платформа</h2>
+    <p>Ҳар он чизе ки барои омӯзиши самаранок лозим аст</p>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card"><div class="feat-icon" style="background:#EFF6FF">🎬</div><div class="feat-title">Видеодарсҳо</div><div class="feat-desc">Дарсҳои сифатноки видеоӣ. Аз компютери худ бор кардан мумкин аст.</div></div>
+    <div class="feat-card"><div class="feat-icon" style="background:#F5F3FF">📝</div><div class="feat-title">Тестҳои онлайн</div><div class="feat-desc">Тестҳои мавзӯъвор бо натиҷаи фаврӣ ва баллҳо.</div></div>
+    <div class="feat-card"><div class="feat-icon" style="background:#ECFDF5">💡</div><div class="feat-title">Масъалаҳо ҳал кун</div><div class="feat-desc">Вазифаҳои дараҷавор аз осон то душвор.</div></div>
+    <div class="feat-card"><div class="feat-icon" style="background:#FEF3C7">🤖</div><div class="feat-title">AI Ёрдамчи</div><div class="feat-desc">Чати AI бо забони тоҷикӣ — ҳар вақт ҷавоб медиҳад.</div></div>
+    <div class="feat-card"><div class="feat-icon" style="background:#FEE2E2">💬</div><div class="feat-title">Чати гурӯҳӣ</div><div class="feat-desc">Бо устод ва дигар хонандагон мустақим сӯҳбат кунед.</div></div>
+    <div class="feat-card"><div class="feat-icon" style="background:#F0FDF4">🏆</div><div class="feat-title">Рейтинг</div><div class="feat-desc">Бинед ки шумо чандумин ҷойдор ҳастед.</div></div>
+  </div>
+</section>
+
+<section style="background:var(--bg);padding:80px 24px;text-align:center">
+  <h2 style="font-family:'Playfair Display',serif;font-size:36px;margin-bottom:16px">Омода ҳастед?</h2>
+  <p style="font-size:16px;color:#64748B;margin-bottom:32px">Ҳозир дохил шавед ва омӯзишро оғоз кунед!</p>
+  <a href="/login" class="btn btn-primary btn-lg">🚀 Дохил шудан</a>
+</section>
+
+<footer>
+  <div>© 2025 EduPlatform — Платформаи таълимии Тоҷикистон</div>
+  <div style="margin-top:8px">
+    <a href="/login" style="color:rgba(255,255,255,.5);text-decoration:none;margin:0 10px">Воридшавӣ</a>
+    <a href="/chat" style="color:rgba(255,255,255,.5);text-decoration:none;margin:0 10px">Чат</a>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script>
+  (async () => {
+    const data = await api('/api/auth/me');
+    if (data.user) document.getElementById('cta-btn').href = data.user.role === 'admin' ? '/admin' : '/pupil';
+  })();
+</script>
+</body>
+</html>
