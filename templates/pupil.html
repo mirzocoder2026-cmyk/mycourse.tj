@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Кабинети Ман — EduPlatform</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  .test-opt { display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:8px;border:2px solid var(--border);cursor:pointer;margin-bottom:8px;transition:all .15s; }
+  .test-opt:hover { border-color:var(--primary); }
+  .test-opt.selected { border-color:var(--primary);background:var(--primary-light); }
+  .score-circle { width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin:0 auto 12px; }
+  .my-rank { font-size:48px;font-weight:800;color:var(--primary); }
+  .section-panel { display:none; } .section-panel.active { display:block; }
+  video { max-width:100%;border-radius:12px; }
+  .task-card { background:var(--surface);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--primary);margin-bottom:16px; }
+  .task-card.accent { border-left-color:var(--accent); }
+  .task-card.warning { border-left-color:var(--warning); }
+  .solved-badge { display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#D1FAE5;color:#059669; }
+  .diff-badge { padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600; }
+  .diff-Осон { background:#D1FAE5;color:#059669; }
+  .diff-Миёна { background:#FEF3C7;color:#D97706; }
+  .diff-Душвор { background:#FEE2E2;color:#DC2626; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">E</div>
+      <div><div class="logo-text">EduPlatform</div><div class="logo-sub">Кабинети хонанда</div></div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-title">Асосӣ</div>
+      <a class="nav-item active" onclick="showSec('home',this)"><span class="icon">🏠</span>Хонаи ман</a>
+      <a class="nav-item" onclick="showSec('rating',this)"><span class="icon">🏆</span>Рейтинг</a>
+
+      <div class="nav-section-title" style="margin-top:16px">Ёдгирӣ</div>
+      <a class="nav-item" onclick="showSec('topics',this)"><span class="icon">📚</span>Мавзӯҳо</a>
+      <a class="nav-item" onclick="showSec('videos',this)"><span class="icon">🎬</span>Видеодарсҳо</a>
+      <a class="nav-item" onclick="showSec('tests',this)"><span class="icon">📝</span>Тестҳо</a>
+      <a class="nav-item" onclick="showSec('tasks',this)"><span class="icon">💡</span>Вазифаҳо</a>
+
+      <div class="nav-section-title" style="margin-top:16px">Алоқа</div>
+      <a class="nav-item" href="/chat"><span class="icon">💬</span>Чат</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar" id="u-avatar">Б</div>
+        <div><div class="user-name" id="u-name">...</div><div class="user-role">Хонанда</div></div>
+      </div>
+      <button class="btn btn-secondary btn-sm btn-full mt-1" onclick="logout()">🚪 Чиқиш</button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="flex gap-3" style="align-items:center">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <span class="topbar-title" id="sec-label">Хонаи ман</span>
+      </div>
+      <div class="topbar-actions"><span class="badge badge-primary" id="score-badge">0 балл</span></div>
+    </div>
+
+    <div class="content">
+
+      <div class="section-panel active" id="sec-home">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">⭐</div><div><div class="stat-value" id="h-score">0</div><div class="stat-label">Умумий балл</div></div></div>
+          <div class="stat-card success"><div class="stat-icon">✅</div><div><div class="stat-value" id="h-solved">0</div><div class="stat-label">Ҳал шуда</div></div></div>
+          <div class="stat-card accent"><div class="stat-icon">🏆</div><div><div class="stat-value" id="h-rank">#–</div><div class="stat-label">Ҷойи ман</div></div></div>
+          <div class="stat-card warning"><div class="stat-icon">📚</div><div><div class="stat-value" id="h-topics">0</div><div class="stat-label">Мавзӯҳо</div></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-header"><span class="card-title">🎬 Охирин видеодарсҳо</span></div><div id="h-videos"></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">💡 Вазифаҳои охирин</span></div><div id="h-tasks"></div></div>
+        </div>
+      </div>
+
+      <div class="section-panel" id="sec-rating">
+        <div class="card mb-3" style="text-align:center;padding:32px">
+          <div class="my-rank" id="mr-place">#—</div>
+          <div style="color:var(--text-muted)">Ҷойи ман дар рейтинг</div>
+          <div style="margin-top:8px"><span class="badge badge-primary" id="mr-score">0 балл</span></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">🏆 Ҷадвали умумӣ</span></div>
+          <div class="table-wrap"><table class="rating-table" id="rat-table"><thead><tr><th>Ҷой</th><th>Хонанда</th><th>Балл</th><th>Ҳал шуда</th><th>Прогресс</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="section-panel" id="sec-topics">
+        <div id="topics-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px"></div>
+      </div>
+
+      <div class="section-panel" id="sec-videos">
+        <div id="vids-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px"></div>
+      </div>
+
+      <div class="section-panel" id="sec-tests">
+        <div id="test-browser"></div>
+        <div id="test-runner" style="display:none"></div>
+        <div id="test-result" style="display:none"></div>
+      </div>
+
+      <div class="section-panel" id="sec-tasks">
+        <div id="tasks-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-video">
+  <div class="modal" style="max-width:700px;padding:16px">
+    <div class="modal-header"><span class="modal-title" id="vid-title">Видео</span><button class="modal-close" onclick="document.getElementById('vid-player').pause()">✕</button></div>
+    <video id="vid-player" controls style="width:100%;border-radius:10px"></video>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="tk-title">Вазифа</span><button class="modal-close">✕</button></div>
+    <div id="tk-body" style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:16px;line-height:1.7"></div>
+    <textarea class="form-control" id="tk-ans" placeholder="Ҷавоби худро нависед..."></textarea>
+    <button class="btn btn-primary btn-full mt-2" onclick="submitTask()">✅ Ҷавоб фиристодан</button>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script>
+  let me = null, curTask = null, curTest = null, testAnswers = {};
+
+  (async () => {
+    me = await requireAuth('pupil');
+    if (!me) return;
+    refreshHeader();
+    renders.home();
+  })();
+
+  function refreshHeader() {
+    document.getElementById('u-name').textContent = me.name;
+    document.getElementById('u-avatar').textContent = me.name[0];
+    document.getElementById('score-badge').textContent = me.score + ' балл';
+  }
+
+  function showSec(name, el) {
+    document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('sec-'+name).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    if(el) el.classList.add('active');
+    document.getElementById('sec-label').textContent = el?el.textContent.trim():name;
+    renders[name]?.();
+    document.getElementById('sidebar').classList.remove('open');
+  }
+
+  const renders = {
+    async home() {
+      const [rated, videos, tasks, topics] = await Promise.all([
+        api('/api/rating'), api('/api/videos'), api('/api/tasks'), api('/api/topics')
+      ]);
+      const rank = rated.findIndex(u=>u.id===me.id)+1;
+      document.getElementById('h-score').textContent = me.score;
+      document.getElementById('h-solved').textContent = me.solved;
+      document.getElementById('h-rank').textContent = '#'+(rank||'—');
+      document.getElementById('h-topics').textContent = topics.length;
+
+      document.getElementById('h-videos').innerHTML = videos.slice(0,3).map(v=>{
+        const t=topics.find(tp=>tp.id===v.topic_id);
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="playVideo('${v.url}','${v.title}')">
+          <span style="font-size:22px">🎬</span>
+          <div><div style="font-weight:600;font-size:13px">${v.title}</div><div style="font-size:12px;color:#64748B">${t?.title||''}</div></div>
+        </div>`;}).join('') || '<div style="color:#94A3B8;text-align:center;padding:20px">Видео ҳанӯз нест</div>';
+
+      document.getElementById('h-tasks').innerHTML = tasks.slice(0,3).map(t=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9">
+          <span>${t.solved?'✅':'💡'}</span>
+          <div style="flex:1"><div style="font-weight:600;font-size:13px">${t.title}</div><div style="font-size:12px;color:#64748B">${t.points} балл</div></div>
+          ${t.solved?'<span class="solved-badge">Ҳал</span>':''}
+        </div>`).join('') || '<div style="color:#94A3B8;text-align:center;padding:20px">Вазифа ҳанӯз нест</div>';
+    },
+
+    async rating() {
+      const rated = await api('/api/rating');
+      const rank = rated.findIndex(u=>u.id===me.id)+1;
+      const max = rated[0]?.score||1;
+      const medals=['🥇','🥈','🥉'];
+      document.getElementById('mr-place').textContent = '#'+(rank||'—');
+      document.getElementById('mr-score').textContent = me.score+' балл';
+      document.querySelector('#rat-table tbody').innerHTML = rated.map((u,i)=>`
+        <tr ${u.id===me.id?'style="background:#EFF6FF"':''}>
+          <td><div class="rank-badge rank-${i<3?i+1:'other'}">${i<3?medals[i]:i+1}</div></td>
+          <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar avatar-sm">${u.name[0]}</div>${u.name}${u.id===me.id?' <span class="badge badge-primary" style="font-size:10px">Ман</span>':''}</div></td>
+          <td><strong style="color:#2563EB">${u.score}</strong></td>
+          <td>${u.solved}</td>
+          <td style="min-width:120px"><div class="progress-bar"><div class="progress-fill" style="width:${Math.round(u.score/max*100)}%"></div></div></td>
+        </tr>`).join('');
+    },
+
+    async topics() {
+      const [topics, videos, tests] = await Promise.all([api('/api/topics'), api('/api/videos'), api('/api/tests')]);
+      document.getElementById('topics-list').innerHTML = topics.map(t=>`
+        <div class="card" style="border-top:4px solid ${t.color};cursor:pointer" onclick="showSec('videos',document.querySelectorAll('.nav-item')[3])">
+          <div style="font-size:36px">${t.icon}</div>
+          <div style="font-weight:700;font-size:16px;margin-top:8px">${t.title}</div>
+          <div style="font-size:13px;color:#64748B;margin-top:4px">${t.description}</div>
+          <div style="margin-top:12px">
+            <span class="badge badge-primary">${videos.filter(v=>v.topic_id===t.id).length} видео</span>
+            <span class="badge badge-accent" style="margin-left:6px">${tests.filter(v=>v.topic_id===t.id).length} тест</span>
+          </div>
+        </div>`).join('') || '<div class="card" style="text-align:center;color:#94A3B8;padding:40px">Мавзӯъ ҳанӯз нест</div>';
+    },
+
+    async videos() {
+      const [videos, topics] = await Promise.all([api('/api/videos'), api('/api/topics')]);
+      document.getElementById('vids-list').innerHTML = videos.map(v=>{
+        const t=topics.find(tp=>tp.id===v.topic_id);
+        return `<div class="video-card" onclick="playVideo('${v.url}','${v.title}')" style="cursor:pointer">
+          <div class="video-thumb"><video src="${v.url}" style="width:100%;height:100%;object-fit:cover"></video></div>
+          <div class="video-info"><div class="video-title">${v.title}</div><div class="video-meta">${t?.icon||'📚'} ${t?.title||'—'} · ${v.duration}</div></div>
+        </div>`;
+      }).join('') || '<div class="card" style="text-align:center;color:#94A3B8;padding:40px">Видео ҳанӯз нест</div>';
+    },
+
+    async tests() {
+      document.getElementById('test-runner').style.display='none';
+      document.getElementById('test-result').style.display='none';
+      document.getElementById('test-browser').style.display='block';
+      const [tests, topics] = await Promise.all([api('/api/tests'), api('/api/topics')]);
+      document.getElementById('test-browser').innerHTML = tests.length ? tests.map(t=>{
+        const top=topics.find(tp=>tp.id===t.topic_id);
+        return `<div class="card mb-3">
+          <div class="flex-between">
+            <div><div style="font-weight:700;font-size:16px">${t.title}</div>
+            <div style="font-size:13px;color:#64748B;margin-top:4px">${top?.icon||''} ${top?.title||''} · ${t.questions?.length||0} савол</div></div>
+            ${t.completed?`<span class="solved-badge">✅ Гузашта</span>`:`<button class="btn btn-primary" onclick="startTest(${t.id})">▶ Оғоз</button>`}
+          </div>
+        </div>`;}).join('') : '<div class="card" style="text-align:center;color:#94A3B8;padding:40px">Тест ҳанӯз нест</div>';
+    },
+
+    async tasks() {
+      const [tasks, topics] = await Promise.all([api('/api/tasks'), api('/api/topics')]);
+      const colors=['','accent','warning'];
+      document.getElementById('tasks-list').innerHTML = tasks.map((t,i)=>{
+        const top=topics.find(tp=>tp.id===t.topic_id);
+        return `<div class="task-card ${colors[i%3]}">
+          <div class="flex-between">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <strong>${t.title}</strong><span class="diff-badge diff-${t.difficulty}">${t.difficulty}</span>
+                ${t.solved?'<span class="solved-badge">✅ Ҳал шуд</span>':''}
+              </div>
+              <div style="font-size:13px;color:#64748B;margin-bottom:8px">${top?.icon||''} ${top?.title||''}</div>
+              <div style="font-size:14px;line-height:1.6">${t.text}</div>
+            </div>
+            <div style="text-align:center;margin-left:16px">
+              <div style="font-size:24px;font-weight:800;color:#2563EB">${t.points}</div>
+              <div style="font-size:11px;color:#64748B">балл</div>
+            </div>
+          </div>
+          ${!t.solved?`<button class="btn btn-primary btn-sm mt-2" onclick="openTask(${t.id},'${t.title.replace(/'/g,"\\'")}',${t.points})">✏ Ҷавоб бидеҳ</button>`:''}
+        </div>`;}).join('') || '<div class="card" style="text-align:center;color:#94A3B8;padding:40px">Вазифа ҳанӯз нест</div>';
+    }
+  };
+
+  function playVideo(url, title) {
+    document.getElementById('vid-player').src = url;
+    document.getElementById('vid-title').textContent = title;
+    openModal('modal-video');
+    document.getElementById('vid-player').play();
+  }
+
+  async function startTest(id) {
+    curTest = await api('/api/tests/' + id);
+    testAnswers = {};
+    document.getElementById('test-browser').style.display='none';
+    document.getElementById('test-result').style.display='none';
+    document.getElementById('test-runner').style.display='block';
+    document.getElementById('test-runner').innerHTML = `
+      <div class="card mb-3"><h2>${curTest.title}</h2></div>
+      ${curTest.questions.map((q,qi)=>`
+        <div class="card mb-3">
+          <div style="font-weight:600;margin-bottom:12px">${qi+1}. ${q.text}</div>
+          ${q.options.map((o,oi)=>`
+            <div class="test-opt" id="opt-${qi}-${oi}" onclick="selectOpt(${qi},${oi})">
+              <span style="width:22px;height:22px;border-radius:50%;border:2px solid #E2E8F0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">${'ABCD'[oi]}</span>${o}
+            </div>`).join('')}
+        </div>`).join('')}
+      <button class="btn btn-primary btn-lg btn-full" onclick="submitTest()">✅ Тестни тугатиш</button>`;
+  }
+
+  function selectOpt(qi, oi) {
+    testAnswers[qi] = oi;
+    curTest.questions[qi].options.forEach((_,i)=>document.getElementById(`opt-${qi}-${i}`)?.classList.remove('selected'));
+    document.getElementById(`opt-${qi}-${oi}`)?.classList.add('selected');
+  }
+
+  async function submitTest() {
+    try {
+      const result = await api(`/api/tests/${curTest.id}/submit`, { method: 'POST', body: { answers: testAnswers } });
+      document.getElementById('test-runner').style.display='none';
+      document.getElementById('test-result').style.display='block';
+      document.getElementById('test-result').innerHTML = `
+        <div class="card" style="text-align:center;padding:40px">
+          <div class="score-circle">${result.percent}%</div>
+          <h2 style="margin-bottom:8px">${result.percent>=70?'🎉 Табрик!':'📚 Боз ҳаракат кун!'}</h2>
+          <p>${result.correct} / ${result.total} савол дуруст</p>
+          <p style="color:#2563EB;font-weight:700;font-size:18px;margin-top:8px">+${result.points_earned} балл қӯшилди!</p>
+          <button class="btn btn-primary mt-3" onclick="renders.tests();document.getElementById('test-result').style.display='none';document.getElementById('test-browser').style.display='block'">⬅ Тестҳо</button>
+        </div>`;
+      me.score = result.new_score;
+      refreshHeader();
+      toast('+'+result.points_earned+' балл!', 'success');
+    } catch (e) {
+      toast(e.message, 'danger');
+    }
+  }
+
+  function openTask(id, title, points) {
+    curTask = { id, title, points };
+    document.getElementById('tk-title').textContent = title + ' ('+points+' балл)';
+    document.getElementById('tk-body').textContent = '';
+    document.getElementById('tk-ans').value = '';
+    openModal('modal-task');
+  }
+
+  async function submitTask() {
+    const answer = document.getElementById('tk-ans').value.trim();
+    if (!answer) { toast('Ҷавоб нависед','danger'); return; }
+    try {
+      const result = await api(`/api/tasks/${curTask.id}/submit`, { method: 'POST', body: { answer } });
+      closeAllModals();
+      toast('+'+result.points_earned+' балл қӯшилди!','success');
+      me.score = result.new_score;
+      refreshHeader();
+      renders.tasks();
+    } catch (e) { toast(e.message, 'danger'); }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Воридшавӣ — EduPlatform</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  body { background: linear-gradient(135deg,#1E3A5F 0%,#2563EB 50%,#7C3AED 100%); display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .login-wrap { width:100%; max-width:420px; padding:20px; }
+  .login-card { background:#fff; border-radius:20px; padding:40px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+  .login-logo { text-align:center; margin-bottom:32px; }
+  .login-logo .logo-icon { width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#2563EB,#7C3AED);display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin-bottom:12px; }
+  .login-logo h1 { font-family:'Playfair Display',serif; font-size:22px;font-weight:700;color:#0F172A; }
+  .login-logo p { font-size:13px;color:#64748B;margin-top:4px; }
+  .role-tabs { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px; }
+  .role-tab { padding:10px;border-radius:8px;border:2px solid #E2E8F0;background:#fff;cursor:pointer;font-size:13px;font-weight:500;text-align:center;transition:all .15s;color:#64748B; }
+  .role-tab.active { border-color:#2563EB;background:#EFF6FF;color:#2563EB; }
+  .demo-box { background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px;margin-bottom:20px;font-size:12px;color:#64748B; }
+  .demo-box strong { color:#0F172A; }
+  .demo-line { display:flex;justify-content:space-between;margin-top:6px; }
+  .divider { text-align:center;color:#94A3B8;font-size:12px;margin:20px 0;position:relative; }
+  .divider::before,.divider::after { content:'';position:absolute;top:50%;width:42%;height:1px;background:#E2E8F0; }
+  .divider::before { left:0; } .divider::after { right:0; }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">E</div>
+      <h1>EduPlatform</h1>
+      <p>Платформаи таълимии пешрафта</p>
+    </div>
+
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="setRole('pupil',this)">👨‍🎓 Хонанда</div>
+      <div class="role-tab" onclick="setRole('admin',this)">👨‍🏫 Устод / Админ</div>
+    </div>
+
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Почтаи электронӣ</label>
+      <input class="form-control" type="email" id="email" placeholder="example@edu.tj">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Парол</label>
+      <input class="form-control" type="password" id="password" placeholder="••••••••">
+    </div>
+
+    <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()" style="margin-top:8px">
+      🚀 Дохил шудан
+    </button>
+
+    <div class="divider">ё</div>
+    <button class="btn btn-secondary btn-full" onclick="quickLogin()">⚡ Суръат дохил шав (демо)</button>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script>
+  let selectedRole = 'pupil';
+
+  (async () => {
+    const me = await api('/api/auth/me');
+    if (me.user) window.location.href = me.user.role === 'admin' ? '/admin' : '/pupil';
+  })();
+
+  function setRole(role, el) {
+    selectedRole = role;
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const demos = { admin: ['admin@edu.tj','admin123'], pupil: ['bahora@edu.tj','123456'] };
+    document.getElementById('demo-info').innerHTML = `<span>📧 ${demos[role][0]}</span><span>🔒 ${demos[role][1]}</span>`;
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    if (!email || !password) { toast('Илтимос, маълумотро пур кунед', 'danger'); return; }
+
+    try {
+      const data = await api('/api/auth/login', { method: 'POST', body: { email, password } });
+      toast('Хуш омадед, ' + data.user.name + '!', 'success');
+      setTimeout(() => window.location.href = data.user.role === 'admin' ? '/admin' : '/pupil', 600);
+    } catch (e) {
+      toast(e.message || 'Имейл ё парол нодуруст аст', 'danger');
+    }
+  }
+
+  function quickLogin() {
+    const demos = { admin: ['admin@edu.tj','admin123'], pupil: ['bahora@edu.tj','123456'] };
+    const [em, pw] = demos[selectedRole];
+    document.getElementById('email').value = em;
+    document.getElementById('password').value = pw;
+    setTimeout(doLogin, 200);
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

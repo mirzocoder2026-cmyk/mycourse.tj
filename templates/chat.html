@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Чат — EduPlatform</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  .chat-layout { display:flex;height:100vh; }
+  .chat-sidebar { width:280px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column; }
+  .chat-main { flex:1;display:flex;flex-direction:column;background:var(--bg); }
+  .chat-header { padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px; }
+  .chat-header-info { flex:1; }
+  .chat-header-name { font-weight:700;font-size:15px; }
+  .chat-header-sub { font-size:12px;color:var(--text-muted); }
+  .online-dot { width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block;margin-right:4px; }
+  .msgs-area { flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px; }
+  .msg { max-width:70%;display:flex;flex-direction:column;gap:4px; }
+  .msg.mine { align-self:flex-end;align-items:flex-end; }
+  .msg.other { align-self:flex-start;align-items:flex-start; }
+  .msg-name { font-size:11px;color:var(--text-muted);font-weight:500; }
+  .msg-bubble { padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;max-width:100%; }
+  .msg.mine .msg-bubble { background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-bottom-right-radius:4px; }
+  .msg.other .msg-bubble { background:var(--surface);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px; }
+  .msg.ai .msg-bubble { background:#F5F3FF;border:1px solid #DDD6FE;color:#3730A3;border-bottom-left-radius:4px; }
+  .msg-time { font-size:10px;color:var(--text-light);padding:0 4px; }
+  .chat-input-area { background:var(--surface);border-top:1px solid var(--border);padding:16px 20px;display:flex;gap:10px;align-items:flex-end; }
+  .chat-input { flex:1;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;font-size:14px;font-family:inherit;outline:none;resize:none;max-height:120px; }
+  .chat-input:focus { border-color:var(--primary); }
+  .send-btn { width:44px;height:44px;background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:12px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center; }
+  .send-btn:disabled { opacity:.5;cursor:not-allowed; }
+  .typing-dots { display:flex;gap:4px;align-items:center;padding:4px 0; }
+  .typing-dots span { width:7px;height:7px;background:var(--accent);border-radius:50%;animation:bounce .8s infinite; }
+  .typing-dots span:nth-child(2) { animation-delay:.15s; } .typing-dots span:nth-child(3) { animation-delay:.3s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+  .sidebar-chat-item { display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border); }
+  .sidebar-chat-item:hover { background:var(--bg); }
+  .sidebar-chat-item.active { background:var(--primary-light); }
+  .ci-name { font-weight:600;font-size:13px; }
+  .ci-last { font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px; }
+  .ai-icon { width:36px;height:36px;background:linear-gradient(135deg,#7C3AED,#2563EB);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+  .back-btn { padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-muted); }
+  @media(max-width:768px){ .chat-sidebar{ display:none; } }
+</style>
+</head>
+<body>
+<div class="chat-layout">
+  <div class="chat-sidebar">
+    <div class="back-btn" onclick="goBack()">← Орқага</div>
+    <div style="padding:16px;font-weight:700;font-size:14px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Чатлар</div>
+    <div class="sidebar-chat-item active" id="tab-ai-btn" onclick="switchChat('ai')">
+      <div class="ai-icon">🤖</div>
+      <div><div class="ci-name">AI Ёрдамчи</div><div class="ci-last">Ҳар вақт омодаам!</div></div>
+      <div style="margin-left:auto"><span class="online-dot"></span></div>
+    </div>
+    <div class="sidebar-chat-item" id="tab-group-btn" onclick="switchChat('group')">
+      <div class="avatar">👥</div>
+      <div><div class="ci-name">Чати гурӯҳ</div><div class="ci-last">Устод ва талабагон</div></div>
+    </div>
+  </div>
+
+  <div class="chat-main">
+    <div class="chat-header">
+      <div class="ai-icon" id="ch-icon">🤖</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name" id="ch-name">AI Ёрдамчи</div>
+        <div class="chat-header-sub"><span class="online-dot"></span><span id="ch-sub">Ҳамеша онлайн</span></div>
+      </div>
+    </div>
+    <div class="msgs-area" id="msgs-area"></div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="msg-input" placeholder="Хабар нависед..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script>
+  let me = null, currentChat = 'ai', isBusy = false, groupPollTimer = null;
+
+  (async () => {
+    me = await requireAuth();
+    if (!me) return;
+    renderAiChat();
+  })();
+
+  function goBack() { window.location.href = me.role === 'admin' ? '/admin' : '/pupil'; }
+
+  async function switchChat(type) {
+    currentChat = type;
+    document.getElementById('tab-ai-btn').classList.toggle('active', type==='ai');
+    document.getElementById('tab-group-btn').classList.toggle('active', type==='group');
+    clearInterval(groupPollTimer);
+    if (type === 'ai') {
+      document.getElementById('ch-icon').textContent = '🤖';
+      document.getElementById('ch-name').textContent = 'AI Ёрдамчи';
+      document.getElementById('ch-sub').textContent = 'Ҳамеша онлайн';
+      await renderAiChat();
+    } else {
+      document.getElementById('ch-icon').textContent = '👥';
+      document.getElementById('ch-name').textContent = 'Чати гурӯҳ';
+      document.getElementById('ch-sub').textContent = 'Устод ва ҷамаи хонандагон';
+      await renderGroupChat();
+      groupPollTimer = setInterval(renderGroupChat, 4000);
+    }
+  }
+
+  async function renderAiChat() {
+    const history = await api('/api/chat/ai/history');
+    const area = document.getElementById('msgs-area');
+    area.innerHTML = '';
+    if (!history.length) {
+      appendMsg({ role:'ai', text:'Салом! 👋 Ман AI Ёрдамчии платформаи EduPlatform ҳастам.\n\nМетавонам ба шумо дар мавзӯъҳои математика, физика, химия ва ғайра кӯмак расонам. Савол диҳед!', name:'AI Ёрдамчи' });
+      return;
+    }
+    history.forEach(h => appendMsg({ role: h.role==='user'?'mine':'ai', text:h.content, name: h.role==='user'?me.name:'AI Ёрдамчи' }));
+  }
+
+  async function sendAiMsg(text) {
+    appendMsg({ role:'mine', text, name:me.name, time:now() });
+    showTyping(true);
+    document.getElementById('send-btn').disabled = true;
+    try {
+      const data = await api('/api/chat/ai', { method: 'POST', body: { message: text } });
+      showTyping(false);
+      appendMsg({ role:'ai', text:data.reply, name:'AI Ёрдамчи', time:now() });
+    } catch (e) {
+      showTyping(false);
+      appendMsg({ role:'ai', text:'❌ ' + (e.message || 'Хато рӯй дод.'), name:'AI Ёрдамчи', time:now() });
+    }
+    document.getElementById('send-btn').disabled = false;
+  }
+
+  async function renderGroupChat() {
+    const msgs = await api('/api/chat/group');
+    const area = document.getElementById('msgs-area');
+    const wasAtBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 30;
+    area.innerHTML = '';
+    if (!msgs.length) { area.innerHTML = '<div style="text-align:center;color:#94A3B8;padding:40px">Ҳанӯз хабар нест. Аввалин бошед!</div>'; return; }
+    msgs.forEach(m => appendMsg({
+      role: m.user_id===me.id?'mine':'other', text:m.text, name:m.name, time:m.time,
+      roleLabel: m.role==='admin'?'👨‍🏫 Устод':''
+    }));
+    if (wasAtBottom || currentChat !== 'group') scrollBottom();
+  }
+
+  async function sendGroupMsg(text) {
+    try {
+      await api('/api/chat/group', { method: 'POST', body: { text } });
+      await renderGroupChat();
+    } catch (e) { toast(e.message, 'danger'); }
+  }
+
+  function sendMsg() {
+    const inp = document.getElementById('msg-input');
+    const text = inp.value.trim();
+    if (!text || isBusy) return;
+    inp.value = ''; inp.style.height = 'auto';
+    if (currentChat === 'ai') sendAiMsg(text);
+    else sendGroupMsg(text);
+  }
+
+  function appendMsg({ role, text, name, time, roleLabel }) {
+    const area = document.getElementById('msgs-area');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `
+      ${role!=='mine'?`<div class="msg-name">${name}${roleLabel?' <span style="color:#7C3AED;font-size:10px">'+roleLabel+'</span>':''}</div>`:''}
+      <div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>
+      ${time?`<div class="msg-time">${time}</div>`:''}`;
+    area.appendChild(div);
+    scrollBottom();
+  }
+
+  function showTyping(show) {
+    let el = document.getElementById('typing-msg');
+    if (show && !el) {
+      el = document.createElement('div'); el.id = 'typing-msg'; el.className = 'msg ai';
+      el.innerHTML = `<div class="msg-name">AI Ёрдамчи</div><div class="msg-bubble" style="padding:12px 16px"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+      document.getElementById('msgs-area').appendChild(el); scrollBottom();
+    } else if (!show && el) el.remove();
+  }
+
+  function scrollBottom() { const a = document.getElementById('msgs-area'); a.scrollTop = a.scrollHeight; }
+  function now() { return new Date().toLocaleTimeString('tg-TJ',{hour:'2-digit',minute:'2-digit'}); }
+</script>
+</body>
+</html>
